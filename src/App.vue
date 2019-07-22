@@ -50,58 +50,80 @@
       </div>
     </nav>
     <div class="container">
-      <div style="margin-top: 50px;">
+      <div style="margin-top: 25px; width: 100%; justify-content: flex-end; display: flex;">
+        <b-button type="is-primary" outlined @click="isComponentModalActive = true">New product</b-button>
+      </div>
+      <div style="margin-top: 25px; width: 100%;">
         <b-table :data="data" :columns="columns"></b-table>
       </div>
     </div>
+
+    <b-modal :active.sync="isComponentModalActive" has-modal-card>
+        <form @submit.prevent="saveProduct">
+          <div class="modal-card" style="width: auto">
+              <header class="modal-card-head">
+                  <p class="modal-card-title">New Product</p>
+              </header>
+              <section class="modal-card-body">
+                  <b-field label="Name">
+                      <b-input
+                          placeholder="Name of the product"
+                          v-model="newProduct.name"
+                          required>
+                      </b-input>
+                  </b-field>
+
+                  <b-field label="Description">
+                      <b-input maxlength="200" v-model="newProduct.description" type="textarea"></b-input>
+                  </b-field>
+
+                  <b-field label="Price">
+                      <b-input
+                          type="number"
+                          v-model="newProduct.price"
+                          placeholder="Price of the product"
+                          required>
+                      </b-input>
+                  </b-field>
+
+                  <b-field label="Qty">
+                      <b-input
+                          type="number"
+                          v-model="newProduct.qty"
+                          placeholder="Qty of the product"
+                          required>
+                      </b-input>
+                  </b-field>
+              </section>
+              <footer class="modal-card-foot">
+                  <button class="button" type="button" @click="isComponentModalActive = false">Close</button>
+                  <button class="button is-primary">Save</button>
+              </footer>
+          </div>
+      </form>
+    </b-modal>
   </div>
 </template>
 
 <script>
+
+import axios from 'axios';
+import NewProductModal from './components/NewProductModal';
+
 export default {
   name: "app",
   components: {
-    
+    NewProductModal
   },
   data() {
     return {
-      data: [
-        {
-          id: 1,
-          first_name: "Jesse",
-          last_name: "Simmons",
-          date: "2016-10-15 13:43:27",
-          gender: "Male"
-        },
-        {
-          id: 2,
-          first_name: "John",
-          last_name: "Jacobs",
-          date: "2016-12-15 06:00:53",
-          gender: "Male"
-        },
-        {
-          id: 3,
-          first_name: "Tina",
-          last_name: "Gilbert",
-          date: "2016-04-26 06:26:28",
-          gender: "Female"
-        },
-        {
-          id: 4,
-          first_name: "Clarence",
-          last_name: "Flores",
-          date: "2016-04-10 10:28:46",
-          gender: "Male"
-        },
-        {
-          id: 5,
-          first_name: "Anne",
-          last_name: "Lee",
-          date: "2016-12-06 14:38:38",
-          gender: "Female"
-        }
-      ],
+      data: [],
+      newProduct: {
+        name: '',
+        description: '',
+        price: '',
+        qty: ''
+      },
       columns: [
         {
           field: "id",
@@ -110,24 +132,55 @@ export default {
           numeric: true
         },
         {
-          field: "first_name",
-          label: "First Name"
+          field: "name",
+          label: "Name"
         },
         {
-          field: "last_name",
-          label: "Last Name"
+          field: "description",
+          label: "Description"
         },
         {
-          field: "date",
-          label: "Date",
+          field: "price",
+          label: "Price",
           centered: true
         },
         {
-          field: "gender",
-          label: "Gender"
+          field: "qty",
+          label: "Qty"
         }
-      ]
+      ],
+      isComponentModalActive: false
     };
+  },
+  mounted() {
+    axios.get('http://localhost:5000/product').then(response => {
+        this.data = response.data;
+    });
+  },
+  methods: {
+    saveProduct() {
+      console.log('save product');
+      console.log('product', this.newProduct.name);
+      
+      const { name, description, price, qty } = this.newProduct;
+      
+      axios.post('http://localhost:5000/product', {
+        name,
+        description,
+        price,
+        qty
+      }).then(response => {
+        console.log('response', response);
+        
+        if(response.status == 200) {
+          this.data.push(response.data);
+          this.isComponentModalActive = false;
+        }
+
+      }).catch(error => {
+        console.log('error', error);
+      });
+    },
   }
 };
 </script>
